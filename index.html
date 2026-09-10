@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NDF Plotter</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script defer src="js/models.js"></script>
+  <script defer src="js/physics.js"></script>
+  <script defer src="js/plot.js"></script>
+  <script defer src="js/app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>NDF Plotter</h1>
+      <p>Neutron dark-field correlation length curves</p>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <aside class="controls-panel">
+      <section class="panel-section curves-section">
+        <div class="section-heading">
+          <div>
+            <h2>Curves</h2>
+            <p class="section-note">Each curve has its own sample and structure parameters.</p>
+          </div>
+        </div>
+
+        <div id="curveList" class="curve-list"></div>
+        <button id="addCurveButton" class="primary-button" type="button">+ Add curve</button>
+      </section>
+
+      <section class="panel-section">
+        <div class="section-heading">
+          <h2>Correlation length range</h2>
+        </div>
+
+        <div class="two-column-fields">
+          <label class="field">
+            <span>ξ min</span>
+            <div class="input-with-unit">
+              <input id="xiMin" type="number" min="0" step="0.01" value="0.01" />
+              <span>µm</span>
+            </div>
+          </label>
+
+          <label class="field">
+            <span>ξ max</span>
+            <div class="input-with-unit">
+              <input id="xiMax" type="number" min="0" step="0.1" value="20" />
+              <span>µm</span>
+            </div>
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Points</span>
+          <input id="pointCount" type="number" min="20" max="2000" step="10" value="300" />
+        </label>
+      </section>
+
+      <section class="panel-section">
+        <div class="section-heading">
+          <h2>Plot</h2>
+        </div>
+
+        <label class="field">
+          <span>Y-axis</span>
+          <select id="yQuantity">
+            <option value="dfi">DFI</option>
+            <option value="lnDfi">ln(DFI)</option>
+            <option value="normalizedLn">ln(DFI) / λ²</option>
+          </select>
+        </label>
+      </section>
+
+      <button id="resetButton" class="secondary-button" type="button">Reset defaults</button>
+    </aside>
+
+    <section class="plot-panel">
+      <div class="plot-header">
+        <div>
+          <h2>Dark-field curves</h2>
+          <p id="curveDescription">DFI as a function of correlation length ξ</p>
+        </div>
+      </div>
+
+      <div class="notice">
+        <strong>Physics placeholder:</strong>
+        G(ξ) and χ are demo functions for now. The multi-curve interface is ready for the validated sphere, cylinder and fractal expressions.
+      </div>
+
+      <div id="plot" class="plot"></div>
+
+      <div class="equation-card">
+        <span class="equation-label">Model</span>
+        <div class="equation">ln(DFI) / λ² = (Δρ)² φ [G(ξ) − 1] χ</div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
