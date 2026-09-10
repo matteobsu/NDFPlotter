@@ -39,19 +39,48 @@ body {
   font-size: 14px;
 }
 
-.app-shell {
+.page-shell {
   display: grid;
-  grid-template-columns: 330px minmax(0, 1fr);
-  gap: 20px;
+  gap: 18px;
   padding: 20px;
-  min-height: calc(100vh - 90px);
 }
 
+.physical-panel,
 .controls-panel,
 .plot-panel {
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 12px;
+}
+
+.physical-panel {
+  padding: 18px;
+}
+
+.physical-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 14px;
+}
+
+.physical-panel-header h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.physical-panel-header p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 18px;
+  min-height: 620px;
 }
 
 .controls-panel {
@@ -86,11 +115,16 @@ body {
 .field {
   display: grid;
   gap: 7px;
-  margin-bottom: 12px;
+  margin: 0;
   font-size: 13px;
+  min-width: 0;
 }
 
-.field:last-child {
+.controls-panel .field {
+  margin-bottom: 12px;
+}
+
+.controls-panel .field:last-child {
   margin-bottom: 0;
 }
 
@@ -125,7 +159,7 @@ select:focus {
 }
 
 .input-with-unit > span {
-  min-width: 42px;
+  min-width: 34px;
   color: var(--muted);
   font-size: 12px;
 }
@@ -134,21 +168,123 @@ select:focus {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+  margin-bottom: 12px;
+}
+
+.primary-button,
+.secondary-button {
+  height: 40px;
+  border-radius: 7px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary-button {
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.primary-button:hover {
+  filter: brightness(0.96);
+}
+
+.add-curve-button {
+  width: auto;
+  min-width: 118px;
+  padding: 0 16px;
+  flex: 0 0 auto;
 }
 
 .secondary-button {
   width: 100%;
-  height: 40px;
-  border-radius: 7px;
   border: 1px solid #cfd6dd;
   background: #ffffff;
   color: #344054;
-  font-weight: 600;
-  cursor: pointer;
 }
 
 .secondary-button:hover {
   background: #f8fafc;
+}
+
+.curve-list {
+  display: grid;
+  gap: 12px;
+}
+
+.curve-card {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(135px, 1fr));
+  gap: 12px 14px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fbfcfd;
+}
+
+.curve-card-header {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 2px;
+}
+
+.curve-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.curve-title-wrap h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.curve-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+
+.curve-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.curve-action-button {
+  padding: 4px 7px;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.curve-action-button:hover {
+  text-decoration: underline;
+}
+
+.curve-action-button.remove-button {
+  color: #9b2c2c;
+}
+
+.curve-action-button:disabled {
+  color: #98a2b3;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+.model-fields {
+  display: contents;
 }
 
 .plot-panel {
@@ -214,9 +350,23 @@ select:focus {
   font-size: 17px;
 }
 
+@media (max-width: 1150px) {
+  .curve-card {
+    grid-template-columns: repeat(3, minmax(140px, 1fr));
+  }
+}
+
 @media (max-width: 900px) {
-  .app-shell {
+  .workspace {
     grid-template-columns: 1fr;
+  }
+
+  .controls-panel {
+    width: 100%;
+  }
+
+  .curve-card {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
   }
 
   .plot {
@@ -224,117 +374,24 @@ select:focus {
   }
 }
 
-@media (max-width: 520px) {
+@media (max-width: 560px) {
   .topbar,
-  .app-shell {
+  .page-shell {
     padding-left: 12px;
     padding-right: 12px;
   }
 
+  .physical-panel-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .add-curve-button {
+    width: 100%;
+  }
+
+  .curve-card,
   .two-column-fields {
     grid-template-columns: 1fr;
   }
-}
-
-.section-note {
-  margin: 4px 0 0;
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.4;
-}
-
-.curve-list {
-  display: grid;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.curve-card {
-  padding: 13px;
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  background: #fbfcfd;
-}
-
-.curve-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
-.curve-title-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.curve-title-wrap h3 {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.curve-swatch {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  flex: 0 0 auto;
-}
-
-.curve-actions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.curve-action-button {
-  padding: 4px 6px;
-  border: 0;
-  background: transparent;
-  color: var(--accent);
-  font: inherit;
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.curve-action-button:hover {
-  text-decoration: underline;
-}
-
-.curve-action-button.remove-button {
-  color: #9b2c2c;
-}
-
-.curve-action-button:disabled {
-  color: #98a2b3;
-  cursor: not-allowed;
-  text-decoration: none;
-}
-
-.primary-button {
-  width: 100%;
-  height: 40px;
-  border: 1px solid var(--accent);
-  border-radius: 7px;
-  background: var(--accent);
-  color: #ffffff;
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.primary-button:hover {
-  filter: brightness(0.96);
-}
-
-.model-fields {
-  padding-top: 2px;
-}
-
-.curves-section {
-  padding-bottom: 18px;
 }
