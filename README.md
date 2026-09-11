@@ -39,3 +39,5 @@ Open `index.html` in a browser. An internet connection is required to load Plotl
 ## Render deployment
 
 Create a new Render Static Site from the repository. The publish directory is the repository root (`.`). No build command is required.
+
+Matteo Busi
