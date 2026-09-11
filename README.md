@@ -1,34 +1,63 @@
 # NDF Plotter
 
-Static web application for plotting expected neutron dark-field curves as a function of correlation length.
+Static web application for plotting expected neutron dark-field curves.
 
-## Current equation
+## Equations
 
-ln(DFI) / lambda^2 = (Delta rho)^2 phi [G(xi) - 1] chi
+Dark-field model:
+
+`ln(DFI) / lambda_DFI^2 = (Delta rho)^2 phi [G(xi) - 1] chi`
+
+Correlation length / instrument geometry:
+
+`xi = lambda_xi * Ls / p`
+
+The two wavelengths are deliberately independent:
+
+- `lambda_DFI` belongs to each individual curve and is used in the DFI equation.
+- `lambda_xi` is a shared instrument-geometry parameter used only to convert between correlation length `xi` and sample-detector distance `Ls`.
+
+The interface uses these units for the geometry conversion:
+
+- `lambda_xi`: Angstrom
+- `Ls`: mm
+- `p`: micrometers
+- `xi`: micrometers
+
+With those displayed units, the code performs the required unit conversion internally.
+
+## X-axis
+
+The plot can be switched between:
+
+- correlation length `xi` in micrometers
+- sample-detector distance `Ls` in mm
+
+When `Ls` is selected, each plotted `Ls` value is converted to `xi` before evaluating `G(xi)`. Switching the X-axis converts the currently displayed range so the same physical interval is preserved.
 
 ## Multi-curve interface
 
-The app supports multiple independent curves. Each curve can have its own:
+Each curve can have its own:
 
-- wavelength
+- DFI wavelength
 - SLD contrast
 - volume fraction
 - structure model
 - model-specific parameters
 
-Use **Add curve** to create a new parameter set, **Duplicate** to copy an existing curve, and **Remove** to delete one. The correlation-length range and plotted Y quantity are shared by all curves.
+The X-axis geometry and plotted Y quantity are shared by all curves.
 
 ## Important
 
-The current G(xi) and chi functions in `js/models.js` are placeholders only. Replace them with the validated expressions for spheres, cylinders, fractals, or other structures.
+The current `G(xi)` and `chi` functions in `js/models.js` are placeholders only. Replace them with validated expressions for spheres, cylinders, fractals, or other structures.
 
 ## Files
 
 - `index.html` - page structure and controls
 - `style.css` - layout and styling
-- `js/app.js` - multi-curve UI logic and curve generation
-- `js/physics.js` - common DFI equation
-- `js/models.js` - structure-dependent G(xi) and chi models
+- `js/app.js` - multi-curve UI logic, X-axis switching and curve generation
+- `js/physics.js` - common DFI equation and xi/Ls conversion
+- `js/models.js` - structure-dependent `G(xi)` and `chi` models
 - `js/plot.js` - Plotly multi-curve rendering
 - `render.yaml` - Render static-site configuration
 
@@ -38,6 +67,4 @@ Open `index.html` in a browser. An internet connection is required to load Plotl
 
 ## Render deployment
 
-Create a new Render Static Site from the repository. The publish directory is the repository root (`.`). No build command is required.
-
-Matteo Busi
+Create a Render Static Site from the repository. The publish directory is the repository root (`.`).

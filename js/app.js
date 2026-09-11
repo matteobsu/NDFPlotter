@@ -2,9 +2,12 @@
   "use strict";
 
   var defaults = {
-    xiMin: 0.01,
-    xiMax: 20,
+    xQuantity: "xi",
+    xMin: 0.01,
+    xMax: 20,
     pointCount: 300,
+    geometryWavelength: 4.0,
+    gratingPeriod: 10.0,
     yQuantity: "dfi",
     curve: {
       wavelength: 4.0,
@@ -16,6 +19,7 @@
 
   var curves = [];
   var nextCurveId = 1;
+  var lastXQuantity = defaults.xQuantity;
 
   var plotColors = [
     "#1f77b4",
@@ -58,6 +62,11 @@
     var element = document.getElementById(id);
     var value = element ? Number(element.value) : NaN;
     return Number.isFinite(value) ? value : fallback;
+  }
+
+  function compactNumber(value) {
+    if (!Number.isFinite(value)) return "";
+    return Number(value.toPrecision(8)).toString();
   }
 
   function findCurve(curveId) {
@@ -211,7 +220,7 @@
       card.appendChild(header);
 
       card.appendChild(createNumberField({
-        label: "Wavelength λ",
+        label: "DFI wavelength λ",
         value: curve.wavelength,
         unit: "Å",
         min: 0,
@@ -297,11 +306,83 @@
     return "Curve " + (index + 1) + " · " + model.name + (parameterText ? " · " + parameterText : "");
   }
 
+  function getGeometry() {
+    return {
+      wavelength: Math.max(numberValue("geometryWavelength", defaults.geometryWavelength), 1e-12),
+      gratingPeriod: Math.max(numberValue("gratingPeriod", defaults.gratingPeriod), 1e-12)
+    };
+  }
+
+  function updateXAxisControls() {
+    var mode = document.getElementById("xQuantity").value;
+    var minLabel = document.getElementById("xMinLabel");
+    var maxLabel = document.getElementById("xMaxLabel");
+    var minUnit = document.getElementById("xMinUnit");
+    var maxUnit = document.getElementById("xMaxUnit");
+    var xMinInput = document.getElementById("xMin");
+    var xMaxInput = document.getElementById("xMax");
+
+    if (mode === "ls") {
+      minLabel.textContent = "Ls min";
+      maxLabel.textContent = "Ls max";
+      minUnit.textContent = "mm";
+      maxUnit.textContent = "mm";
+      xMinInput.step = "1";
+      xMaxInput.step = "10";
+    } else {
+      minLabel.textContent = "ξ min";
+      maxLabel.textContent = "ξ max";
+      minUnit.textContent = "µm";
+      maxUnit.textContent = "µm";
+      xMinInput.step = "0.01";
+      xMaxInput.step = "0.1";
+    }
+  }
+
+  function handleXQuantityChange() {
+    var newMode = document.getElementById("xQuantity").value;
+    var xMinInput = document.getElementById("xMin");
+    var xMaxInput = document.getElementById("xMax");
+    var xMin = numberValue("xMin", defaults.xMin);
+    var xMax = numberValue("xMax", defaults.xMax);
+    var geometry = getGeometry();
+
+    if (newMode !== lastXQuantity) {
+      if (lastXQuantity === "xi" && newMode === "ls") {
+        xMin = window.NDFPhysics.lsFromCorrelationLength(xMin, geometry.wavelength, geometry.gratingPeriod);
+        xMax = window.NDFPhysics.lsFromCorrelationLength(xMax, geometry.wavelength, geometry.gratingPeriod);
+      } else if (lastXQuantity === "ls" && newMode === "xi") {
+        xMin = window.NDFPhysics.correlationLengthFromLs(geometry.wavelength, xMin, geometry.gratingPeriod);
+        xMax = window.NDFPhysics.correlationLengthFromLs(geometry.wavelength, xMax, geometry.gratingPeriod);
+      }
+
+      if (Number.isFinite(xMin)) xMinInput.value = compactNumber(xMin);
+      if (Number.isFinite(xMax)) xMaxInput.value = compactNumber(xMax);
+      lastXQuantity = newMode;
+    }
+
+    updateXAxisControls();
+    updatePlot();
+  }
+
   function buildCurve(curve, index, shared) {
     var model = window.NDFModels[curve.model];
-    var x = window.NDFPhysics.linspace(shared.xiMin, shared.xiMax, shared.pointCount);
+    var xValues = window.NDFPhysics.linspace(shared.xMin, shared.xMax, shared.pointCount);
+    var xiValues;
 
-    var y = x.map(function (xi) {
+    if (shared.xQuantity === "ls") {
+      xiValues = xValues.map(function (ls) {
+        return window.NDFPhysics.correlationLengthFromLs(
+          shared.geometryWavelength,
+          ls,
+          shared.gratingPeriod
+        );
+      });
+    } else {
+      xiValues = xValues.slice();
+    }
+
+    var y = xiValues.map(function (xi) {
       var G = model.G(xi, curve.parameters);
       var chi = model.chi(curve.parameters);
 
@@ -334,7 +415,8 @@
     });
 
     return {
-      x: x,
+      x: xValues,
+      xi: xiValues,
       y: y,
       name: getCurveName(curve, index),
       quantity: shared.quantity,
@@ -343,53 +425,71 @@
   }
 
   function updatePlot() {
-    var xiMin = numberValue("xiMin", defaults.xiMin);
-    var xiMax = numberValue("xiMax", defaults.xiMax);
+    var xMin = numberValue("xMin", defaults.xMin);
+    var xMax = numberValue("xMax", defaults.xMax);
     var pointCount = Math.round(numberValue("pointCount", defaults.pointCount));
+    var xQuantity = document.getElementById("xQuantity").value;
     var quantity = document.getElementById("yQuantity").value;
+    var geometry = getGeometry();
 
     pointCount = Math.max(20, Math.min(2000, pointCount));
-    if (xiMax <= xiMin) xiMax = xiMin + 1;
+    if (xMax <= xMin) xMax = xMin + (xQuantity === "ls" ? 1 : 0.1);
 
     var shared = {
-      xiMin: xiMin,
-      xiMax: xiMax,
+      xMin: xMin,
+      xMax: xMax,
+      xQuantity: xQuantity,
       pointCount: pointCount,
-      quantity: quantity
+      quantity: quantity,
+      geometryWavelength: geometry.wavelength,
+      gratingPeriod: geometry.gratingPeriod
     };
 
     var plotCurves = curves.map(function (curve, index) {
       return buildCurve(curve, index, shared);
     });
 
-    window.NDFPlot.renderPlot(plotCurves, { quantity: quantity });
+    window.NDFPlot.renderPlot(plotCurves, {
+      quantity: quantity,
+      xQuantity: xQuantity,
+      geometryWavelength: geometry.wavelength,
+      gratingPeriod: geometry.gratingPeriod
+    });
   }
 
   function resetDefaults() {
-    document.getElementById("xiMin").value = defaults.xiMin;
-    document.getElementById("xiMax").value = defaults.xiMax;
+    document.getElementById("xQuantity").value = defaults.xQuantity;
+    document.getElementById("xMin").value = defaults.xMin;
+    document.getElementById("xMax").value = defaults.xMax;
     document.getElementById("pointCount").value = defaults.pointCount;
+    document.getElementById("geometryWavelength").value = defaults.geometryWavelength;
+    document.getElementById("gratingPeriod").value = defaults.gratingPeriod;
     document.getElementById("yQuantity").value = defaults.yQuantity;
 
+    lastXQuantity = defaults.xQuantity;
     nextCurveId = 1;
     curves = [createDefaultCurve()];
+    updateXAxisControls();
     renderCurveCards();
     updatePlot();
   }
 
   function bindEvents() {
-    ["xiMin", "xiMax", "pointCount", "yQuantity"].forEach(function (id) {
+    ["xMin", "xMax", "pointCount", "geometryWavelength", "gratingPeriod", "yQuantity"].forEach(function (id) {
       var element = document.getElementById(id);
       element.addEventListener("input", updatePlot);
       element.addEventListener("change", updatePlot);
     });
 
+    document.getElementById("xQuantity").addEventListener("change", handleXQuantityChange);
     document.getElementById("addCurveButton").addEventListener("click", addCurve);
     document.getElementById("resetButton").addEventListener("click", resetDefaults);
   }
 
   function init() {
     curves = [createDefaultCurve()];
+    lastXQuantity = document.getElementById("xQuantity").value;
+    updateXAxisControls();
     renderCurveCards();
     bindEvents();
     updatePlot();

@@ -24,7 +24,7 @@
       <div class="physical-panel-header">
         <div>
           <h2>Physical parameters</h2>
-          <p>Each curve has its own neutron, sample and structure parameters.</p>
+          <p>Each curve has its own DFI wavelength, sample and structure parameters.</p>
         </div>
         <button id="addCurveButton" class="primary-button add-curve-button" type="button">+ Add curve</button>
       </div>
@@ -36,23 +36,31 @@
       <aside class="controls-panel">
         <section class="panel-section">
           <div class="section-heading">
-            <h2>Correlation length</h2>
+            <h2>X-axis</h2>
           </div>
+
+          <label class="field">
+            <span>Plot against</span>
+            <select id="xQuantity">
+              <option value="xi">Correlation length ξ</option>
+              <option value="ls">Sample-detector distance Ls</option>
+            </select>
+          </label>
 
           <div class="two-column-fields">
             <label class="field">
-              <span>ξ min</span>
+              <span id="xMinLabel">ξ min</span>
               <div class="input-with-unit">
-                <input id="xiMin" type="number" min="0" step="0.01" value="0.01" />
-                <span>µm</span>
+                <input id="xMin" type="number" min="0" step="0.01" value="0.01" />
+                <span id="xMinUnit">µm</span>
               </div>
             </label>
 
             <label class="field">
-              <span>ξ max</span>
+              <span id="xMaxLabel">ξ max</span>
               <div class="input-with-unit">
-                <input id="xiMax" type="number" min="0" step="0.1" value="20" />
-                <span>µm</span>
+                <input id="xMax" type="number" min="0" step="0.1" value="20" />
+                <span id="xMaxUnit">µm</span>
               </div>
             </label>
           </div>
@@ -61,6 +69,32 @@
             <span>Points</span>
             <input id="pointCount" type="number" min="20" max="2000" step="10" value="300" />
           </label>
+        </section>
+
+        <section class="panel-section">
+          <div class="section-heading">
+            <h2>Instrument geometry</h2>
+          </div>
+
+          <p class="section-note">Used only to convert between ξ and Ls. This wavelength is independent from the wavelength used in each DFI curve.</p>
+
+          <label class="field">
+            <span>Geometry wavelength λ<sub>ξ</sub></span>
+            <div class="input-with-unit">
+              <input id="geometryWavelength" type="number" min="0.000001" step="0.01" value="4" />
+              <span>Å</span>
+            </div>
+          </label>
+
+          <label class="field">
+            <span>Grating period p</span>
+            <div class="input-with-unit">
+              <input id="gratingPeriod" type="number" min="0.000001" step="0.1" value="10" />
+              <span>µm</span>
+            </div>
+          </label>
+
+          <div class="relation-box">ξ = λ<sub>ξ</sub> L<sub>s</sub> / p</div>
         </section>
 
         <section class="panel-section">
@@ -99,6 +133,7 @@
         <div class="equation-card">
           <span class="equation-label">Model</span>
           <div class="equation">ln(DFI) / λ² = (Δρ)² φ [G(ξ) − 1] χ</div>
+          <div class="equation equation-secondary">ξ = λ<sub>ξ</sub> L<sub>s</sub> / p</div>
         </div>
       </section>
     </div>
